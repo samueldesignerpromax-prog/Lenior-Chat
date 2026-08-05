@@ -42,17 +42,30 @@ export default function Chat() {
       if (sessionId) payload.sessao_id = sessionId;
 
       const res = await api.post('/chat/texto', payload);
-      console.log('📥 Resposta:', res.data);
+      console.log('📥 Resposta completa:', res);
+      console.log('📥 Dados da resposta:', res.data);
 
-      const botReply = res.data?.resposta || res.data?.mensagem || JSON.stringify(res.data);
+      // Tenta extrair a resposta de diferentes formatos
+      const botReply = res.data?.resposta || 
+                       res.data?.answer || 
+                       res.data?.mensagem || 
+                       res.data?.response ||
+                       JSON.stringify(res.data);
+
       if (res.data?.sessao_id) {
         updateSession(res.data.sessao_id);
       }
+
       setMessages(prev => [...prev, { text: botReply, isUser: false }]);
     } catch (err) {
       console.error('❌ Erro completo:', err);
-      console.error('❌ Resposta do erro:', err.response?.data);
-      const errorMsg = err.response?.data?.erro || err.response?.data?.detail || 'Erro ao conectar com a IA';
+      console.error('❌ Response do erro:', err.response);
+      console.error('❌ Dados do erro:', err.response?.data);
+      
+      const errorMsg = err.response?.data?.erro || 
+                       err.response?.data?.detail || 
+                       err.response?.data?.message ||
+                       'Erro ao conectar com a IA';
       toast.error(errorMsg);
       setMessages(prev => [...prev, { text: `❌ ${errorMsg}`, isUser: false }]);
     } finally {
@@ -75,14 +88,21 @@ export default function Chat() {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       console.log('📥 Resposta áudio:', res.data);
-      const botReply = res.data?.resposta || res.data?.mensagem || JSON.stringify(res.data);
+      
+      const botReply = res.data?.resposta || 
+                       res.data?.answer || 
+                       res.data?.mensagem || 
+                       JSON.stringify(res.data);
+      
       if (res.data?.sessao_id) {
         updateSession(res.data.sessao_id);
       }
       setMessages(prev => [...prev, { text: botReply, isUser: false }]);
     } catch (err) {
       console.error('❌ Erro áudio:', err);
-      const errorMsg = err.response?.data?.erro || err.response?.data?.detail || 'Erro ao processar áudio';
+      const errorMsg = err.response?.data?.erro || 
+                       err.response?.data?.detail || 
+                       'Erro ao processar áudio';
       toast.error(errorMsg);
       setMessages(prev => [...prev, { text: `❌ ${errorMsg}`, isUser: false }]);
     } finally {
