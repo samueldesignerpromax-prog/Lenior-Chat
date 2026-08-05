@@ -29,43 +29,87 @@ export default function Chat() {
     }
   };
 
+  // =============================================
+  // ENVIO DE MENSAGEM (TEXTO)
+  // =============================================
   const sendMessage = async (text) => {
     if (!text.trim()) return;
     const userMessage = text.trim();
+    
+    // Adiciona mensagem do usuário na UI
     setMessages(prev => [...prev, { text: userMessage, isUser: true }]);
     setInput('');
     setLoading(true);
 
     try {
-      console.log('📤 Enviando para:', `${API_URL}/chat/texto`);
+      // Monta o payload
       const payload = { texto: userMessage };
       if (sessionId) payload.sessao_id = sessionId;
 
-      const res = await api.post('/chat/texto', payload);
-      console.log('📥 Resposta completa:', res);
-      console.log('📥 Dados da resposta:', res.data);
+      // Faz a requisição POST para /chat/texto
+      const response = await api.post('/chat/texto', payload);
 
-      // Tenta extrair a resposta de diferentes formatos
-      const botReply = res.data?.resposta || 
-                       res.data?.answer || 
-                       res.data?.mensagem || 
-                       res.data?.response ||
-                       JSON.stringify(res.data);
+      // Extrai a resposta (suporta diferentes formatos)
+      const botReply = response.data?.resposta || 
+                       response.data?.answer || 
+                       response.data?.mensagem || 
+                       response.data?.response ||
+                       'Desculpe, não entendi a resposta.';
 
-      if (res.data?.sessao_id) {
-        updateSession(res.data.sessao_id);
+      // Atualiza a sessão se veio um novo ID
+      if (response.data?.sessao_id) {
+        updateSession(response.data.sessao_id);
+      }
+
+      // Adiciona a resposta do bot na UI
+      setMessages(prev => [...prev, { text: botReply, isUser: false }]);
+
+    } catch (error) {
+      console.error('❌ Erro no envio:', error);
+      
+      // Extrai a mensagem de erro da resposta da API
+      const errorMsg = error.response?.data?.erro || 
+                       error.response?.data?.detail || 
+                       error.response?.data?.message ||
+                       'Erro ao processar sua mensagem. Tente novamente.';
+      
+      toast.error(errorMsg);
+      setMessages(prev => [...prev, { text: `❌ ${errorMsg}`, isUser: false }]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // =============================================
+  // ENVIO DE ÁUDIO
+  // =============================================
+  const handleAudioSend = async (formData) => {
+    setLoading(true);
+    setMessages(prev => [...prev, { text: '🎤 Enviei um áudio...', isUser: true }]);
+
+    try {
+      if (sessionId) formData.append('sessao_id', sessionId);
+
+      const response = await api.post('/chat/audio', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+
+      const botReply = response.data?.resposta || 
+                       response.data?.answer || 
+                       response.data?.mensagem || 
+                       'Áudio processado com sucesso.';
+
+      if (response.data?.sessao_id) {
+        updateSession(response.data.sessao_id);
       }
 
       setMessages(prev => [...prev, { text: botReply, isUser: false }]);
-    } catch (err) {
-      console.error('❌ Erro completo:', err);
-      console.error('❌ Response do erro:', err.response);
-      console.error('❌ Dados do erro:', err.response?.data);
-      
-      const errorMsg = err.response?.data?.erro || 
-                       err.response?.data?.detail || 
-                       err.response?.data?.message ||
-                       'Erro ao conectar com a IA';
+
+    } catch (error) {
+      console.error('❌ Erro no áudio:', error);
+      const errorMsg = error.response?.data?.erro || 
+                       error.response?.data?.detail || 
+                       'Erro ao processar o áudio.';
       toast.error(errorMsg);
       setMessages(prev => [...prev, { text: `❌ ${errorMsg}`, isUser: false }]);
     } finally {
@@ -78,40 +122,12 @@ export default function Chat() {
     sendMessage(input);
   };
 
-  const handleAudioSend = async (formData) => {
-    setLoading(true);
-    setMessages(prev => [...prev, { text: '🎤 Enviei um áudio...', isUser: true }]);
-
-    try {
-      if (sessionId) formData.append('sessao_id', sessionId);
-      const res = await api.post('/chat/audio', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
-      console.log('📥 Resposta áudio:', res.data);
-      
-      const botReply = res.data?.resposta || 
-                       res.data?.answer || 
-                       res.data?.mensagem || 
-                       JSON.stringify(res.data);
-      
-      if (res.data?.sessao_id) {
-        updateSession(res.data.sessao_id);
-      }
-      setMessages(prev => [...prev, { text: botReply, isUser: false }]);
-    } catch (err) {
-      console.error('❌ Erro áudio:', err);
-      const errorMsg = err.response?.data?.erro || 
-                       err.response?.data?.detail || 
-                       'Erro ao processar áudio';
-      toast.error(errorMsg);
-      setMessages(prev => [...prev, { text: `❌ ${errorMsg}`, isUser: false }]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  // =============================================
+  // RENDER
+  // =============================================
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 180px)' }}>
+      {/* Cabeçalho */}
       <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap' }}>
         <div>
           <h2 style={{ color: '#d4af37' }}>💬 Conversar com Lenior</h2>
@@ -131,6 +147,7 @@ export default function Chat() {
         </div>
       </div>
 
+      {/* Área de mensagens */}
       <div className="card" style={{
         flex: 1,
         overflowY: 'auto',
@@ -161,6 +178,7 @@ export default function Chat() {
         <div ref={messagesEndRef} />
       </div>
 
+      {/* Input e controles */}
       <form onSubmit={handleSubmit} style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
         <input
           type="text"
