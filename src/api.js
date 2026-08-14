@@ -1,7 +1,6 @@
 import axios from 'axios';
 
-// URL fixa (substitua se mudar)
-export const API_URL = 'https://lenior-api-com-groq.onrender.com';
+export const API_URL = 'https://lenior-api-com-groq-1.onrender.com';
 
 const api = axios.create({
   baseURL: API_URL,
