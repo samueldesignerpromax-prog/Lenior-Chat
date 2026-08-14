@@ -49,10 +49,6 @@ export default function AudioRecorder({ onAudioSend, disabled }) {
       const blob = await fetch(audioURL).then(r => r.blob());
       const formData = new FormData();
       formData.append('audio', blob, 'recording.webm');
-      // Sessão opcional – pode ser gerada automaticamente pela API
-      const sessionId = localStorage.getItem('lenior_session') || undefined;
-      if (sessionId) formData.append('sessao_id', sessionId);
-
       await onAudioSend(formData);
       setAudioURL(null);
     } catch (err) {
@@ -76,7 +72,6 @@ export default function AudioRecorder({ onAudioSend, disabled }) {
       )}
       {recording && (
         <button
-          className="btn-secondary"
           onClick={stopRecording}
           style={{ padding: '8px 16px', background: '#e74c3c', color: '#fff', border: 'none', borderRadius: '30px', display: 'flex', alignItems: 'center', gap: '6px' }}
         >
@@ -95,7 +90,6 @@ export default function AudioRecorder({ onAudioSend, disabled }) {
             <FaUpload /> Enviar Áudio
           </button>
           <button
-            className="btn-secondary"
             onClick={() => setAudioURL(null)}
             style={{ padding: '8px 16px', background: 'transparent', border: '1px solid #888', color: '#888', borderRadius: '30px' }}
           >
