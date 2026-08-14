@@ -29,50 +29,38 @@ export default function Chat() {
     }
   };
 
-  // =============================================
-  // ENVIO DE MENSAGEM (TEXTO)
-  // =============================================
   const sendMessage = async (text) => {
     if (!text.trim()) return;
     const userMessage = text.trim();
-    
-    // Adiciona mensagem do usuário na UI
+
     setMessages(prev => [...prev, { text: userMessage, isUser: true }]);
     setInput('');
     setLoading(true);
 
     try {
-      // Monta o payload
       const payload = { texto: userMessage };
       if (sessionId) payload.sessao_id = sessionId;
 
-      // Faz a requisição POST para /chat/texto
       const response = await api.post('/chat/texto', payload);
 
-      // Extrai a resposta (suporta diferentes formatos)
-      const botReply = response.data?.resposta || 
-                       response.data?.answer || 
-                       response.data?.mensagem || 
+      const botReply = response.data?.resposta ||
+                       response.data?.answer ||
+                       response.data?.mensagem ||
                        response.data?.response ||
                        'Desculpe, não entendi a resposta.';
 
-      // Atualiza a sessão se veio um novo ID
       if (response.data?.sessao_id) {
         updateSession(response.data.sessao_id);
       }
 
-      // Adiciona a resposta do bot na UI
       setMessages(prev => [...prev, { text: botReply, isUser: false }]);
 
     } catch (error) {
-      console.error('❌ Erro no envio:', error);
-      
-      // Extrai a mensagem de erro da resposta da API
-      const errorMsg = error.response?.data?.erro || 
-                       error.response?.data?.detail || 
+      console.error('Erro no envio:', error);
+      const errorMsg = error.response?.data?.erro ||
+                       error.response?.data?.detail ||
                        error.response?.data?.message ||
                        'Erro ao processar sua mensagem. Tente novamente.';
-      
       toast.error(errorMsg);
       setMessages(prev => [...prev, { text: `❌ ${errorMsg}`, isUser: false }]);
     } finally {
@@ -80,9 +68,6 @@ export default function Chat() {
     }
   };
 
-  // =============================================
-  // ENVIO DE ÁUDIO
-  // =============================================
   const handleAudioSend = async (formData) => {
     setLoading(true);
     setMessages(prev => [...prev, { text: '🎤 Enviei um áudio...', isUser: true }]);
@@ -94,9 +79,9 @@ export default function Chat() {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
 
-      const botReply = response.data?.resposta || 
-                       response.data?.answer || 
-                       response.data?.mensagem || 
+      const botReply = response.data?.resposta ||
+                       response.data?.answer ||
+                       response.data?.mensagem ||
                        'Áudio processado com sucesso.';
 
       if (response.data?.sessao_id) {
@@ -106,9 +91,9 @@ export default function Chat() {
       setMessages(prev => [...prev, { text: botReply, isUser: false }]);
 
     } catch (error) {
-      console.error('❌ Erro no áudio:', error);
-      const errorMsg = error.response?.data?.erro || 
-                       error.response?.data?.detail || 
+      console.error('Erro no áudio:', error);
+      const errorMsg = error.response?.data?.erro ||
+                       error.response?.data?.detail ||
                        'Erro ao processar o áudio.';
       toast.error(errorMsg);
       setMessages(prev => [...prev, { text: `❌ ${errorMsg}`, isUser: false }]);
@@ -122,12 +107,8 @@ export default function Chat() {
     sendMessage(input);
   };
 
-  // =============================================
-  // RENDER
-  // =============================================
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 180px)' }}>
-      {/* Cabeçalho */}
       <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap' }}>
         <div>
           <h2 style={{ color: '#d4af37' }}>💬 Conversar com Lenior</h2>
@@ -147,7 +128,6 @@ export default function Chat() {
         </div>
       </div>
 
-      {/* Área de mensagens */}
       <div className="card" style={{
         flex: 1,
         overflowY: 'auto',
@@ -178,7 +158,6 @@ export default function Chat() {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input e controles */}
       <form onSubmit={handleSubmit} style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
         <input
           type="text"
@@ -195,7 +174,7 @@ export default function Chat() {
       </form>
 
       <p style={{ color: '#555', fontSize: '0.75rem', marginTop: '10px', textAlign: 'center' }}>
-        Lenior é uma IA assistente. Suporte a texto e áudio. 
+        Lenior é uma IA assistente. Suporte a texto e áudio.
         <a href={API_URL + '/status'} target="_blank" rel="noopener noreferrer" style={{ color: '#d4af37', marginLeft: '6px' }}>
           Ver status da API
         </a>
