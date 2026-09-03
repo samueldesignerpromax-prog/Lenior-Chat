@@ -1,25 +1,14 @@
 import React from 'react';
-import { FaBrain } from 'react-icons/fa';
 
-export default function Navbar() {
+const Navbar = () => {
   return (
-    <nav style={{
-      background: 'rgba(13,13,13,0.95)',
-      backdropFilter: 'blur(12px)',
-      borderBottom: '1px solid #333',
-      padding: '14px 20px',
-      position: 'sticky',
-      top: 0,
-      zIndex: 999,
-    }}>
-      <div className="container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '1.6rem', fontWeight: 'bold', color: '#d4af37' }}>
-          <FaBrain /> Lenior
-        </div>
-        <div style={{ color: '#888', fontSize: '0.9rem' }}>
-          Assistente IA
-        </div>
+    <nav className="navbar">
+      <div className="nav-content">
+        <h1>🤖 Lenior Chat</h1>
+        <span className="status">Online</span>
       </div>
     </nav>
   );
-}
+};
+
+export default Navbar;
