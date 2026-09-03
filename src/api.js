@@ -1,18 +1,17 @@
 import axios from 'axios';
 
-// Usa a variável de ambiente
-export const API_URL = import.meta.env.VITE_API_URL;
+// Em desenvolvimento, use o proxy do Vite
+export const API_URL = '/api';
 
-// Fallback para teste (caso o .env não carregue)
+// Se quiser testar direto, descomente a linha abaixo e comente a de cima
 // export const API_URL = 'https://api-lenior.onrender.com';
 
 const api = axios.create({
   baseURL: API_URL,
-  timeout: 30000, // 30 segundos
+  timeout: 30000,
   headers: { 'Content-Type': 'application/json' },
 });
 
-// Interceptadores para debug
 api.interceptors.request.use((config) => {
   console.log(`[${config.method.toUpperCase()}] ${config.url}`, config.data || '');
   return config;
