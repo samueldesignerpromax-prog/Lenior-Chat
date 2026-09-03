@@ -12,13 +12,11 @@ const Chat = () => {
   const [sessionId, setSessionId] = useState(null);
   const messagesEndRef = useRef(null);
 
-  // Carrega sessionId do localStorage
   useEffect(() => {
     const stored = localStorage.getItem('lenior_session_id');
     if (stored) setSessionId(stored);
   }, []);
 
-  // Scroll automático para última mensagem
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
@@ -37,14 +35,9 @@ const Chat = () => {
 
       const response = await api.post('/chat/texto', payload);
 
-      const botReply =
-        response.data?.resposta ||
-        response.data?.answer ||
-        response.data?.mensagem ||
-        response.data?.response ||
-        'Desculpe, não entendi a resposta.';
+      // Verifica se a resposta tem o campo esperado
+      const botReply = response.data?.resposta || 'Desculpe, não entendi a resposta.';
 
-      // Atualiza sessionId se veio da resposta
       if (response.data?.sessao_id) {
         const newSession = response.data.sessao_id;
         setSessionId(newSession);
@@ -53,8 +46,17 @@ const Chat = () => {
 
       setMessages((prev) => [...prev, { role: 'assistant', content: botReply }]);
     } catch (error) {
-      console.error(error);
-      toast.error('Erro ao enviar mensagem. Tente novamente.');
+      console.error('Erro no envio:', error);
+      // Mostra mensagem de erro amigável
+      let errorMsg = 'Erro ao enviar mensagem. Tente novamente.';
+      if (error.response?.status === 500) {
+        errorMsg = 'O servidor está com problemas. Tente mais tarde.';
+      } else if (error.code === 'ECONNABORTED') {
+        errorMsg = 'A requisição demorou muito. Verifique sua internet.';
+      } else if (!error.response) {
+        errorMsg = 'Não foi possível conectar ao servidor. Verifique sua internet.';
+      }
+      toast.error(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -71,12 +73,7 @@ const Chat = () => {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
 
-      const botReply =
-        response.data?.resposta ||
-        response.data?.answer ||
-        response.data?.mensagem ||
-        response.data?.response ||
-        'Desculpe, não entendi o áudio.';
+      const botReply = response.data?.resposta || 'Desculpe, não entendi o áudio.';
 
       if (response.data?.sessao_id) {
         const newSession = response.data.sessao_id;
@@ -84,7 +81,6 @@ const Chat = () => {
         localStorage.setItem('lenior_session_id', newSession);
       }
 
-      // Adiciona a mensagem transcrita (se veio)
       if (response.data?.texto_transcrito) {
         setMessages((prev) => [
           ...prev,
