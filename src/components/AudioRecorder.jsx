@@ -1,102 +1,57 @@
 import React, { useState, useRef } from 'react';
-import { FaMicrophone, FaStop, FaUpload } from 'react-icons/fa';
+import { FaMicrophone, FaStop } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 
-export default function AudioRecorder({ onAudioSend, disabled }) {
+const AudioRecorder = ({ onSend, disabled }) => {
   const [recording, setRecording] = useState(false);
-  const [audioURL, setAudioURL] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const mediaRecorderRef = useRef(null);
-  const chunksRef = useRef([]);
+  const [permission, setPermission] = useState(false);
+  const mediaRecorder = useRef(null);
+  const chunks = useRef([]);
 
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream);
-      mediaRecorderRef.current = mediaRecorder;
-      chunksRef.current = [];
+      setPermission(true);
+      mediaRecorder.current = new MediaRecorder(stream);
+      chunks.current = [];
 
-      mediaRecorder.ondataavailable = (e) => {
-        if (e.data.size > 0) chunksRef.current.push(e.data);
+      mediaRecorder.current.ondataavailable = (e) => {
+        if (e.data.size > 0) chunks.current.push(e.data);
       };
 
-      mediaRecorder.onstop = () => {
-        const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
-        const url = URL.createObjectURL(blob);
-        setAudioURL(url);
-        stream.getTracks().forEach(track => track.stop());
+      mediaRecorder.current.onstop = () => {
+        const blob = new Blob(chunks.current, { type: 'audio/webm' });
+        onSend(blob);
+        chunks.current = [];
       };
 
-      mediaRecorder.start();
+      mediaRecorder.current.start();
       setRecording(true);
-      toast.success('🎤 Gravando...');
-    } catch (err) {
-      toast.error('Permissão de microfone negada');
+      toast.success('Gravando...');
+    } catch (error) {
+      console.error(error);
+      toast.error('Permissão do microfone negada.');
     }
   };
 
   const stopRecording = () => {
-    if (mediaRecorderRef.current && recording) {
-      mediaRecorderRef.current.stop();
+    if (mediaRecorder.current && recording) {
+      mediaRecorder.current.stop();
       setRecording(false);
-    }
-  };
-
-  const sendAudio = async () => {
-    if (!audioURL) return;
-    setLoading(true);
-    try {
-      const blob = await fetch(audioURL).then(r => r.blob());
-      const formData = new FormData();
-      formData.append('audio', blob, 'recording.webm');
-      await onAudioSend(formData);
-      setAudioURL(null);
-    } catch (err) {
-      toast.error('Erro ao enviar áudio');
-    } finally {
-      setLoading(false);
+      mediaRecorder.current.stream.getTracks().forEach((track) => track.stop());
     }
   };
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-      {!recording && !audioURL && (
-        <button
-          className="btn-primary"
-          onClick={startRecording}
-          disabled={disabled || loading}
-          style={{ padding: '8px 16px', display: 'flex', alignItems: 'center', gap: '6px' }}
-        >
-          <FaMicrophone /> Gravar Áudio
-        </button>
-      )}
-      {recording && (
-        <button
-          onClick={stopRecording}
-          style={{ padding: '8px 16px', background: '#e74c3c', color: '#fff', border: 'none', borderRadius: '30px', display: 'flex', alignItems: 'center', gap: '6px' }}
-        >
-          <FaStop /> Parar
-        </button>
-      )}
-      {audioURL && !recording && (
-        <>
-          <audio controls src={audioURL} style={{ height: '40px', maxWidth: '200px' }} />
-          <button
-            className="btn-primary"
-            onClick={sendAudio}
-            disabled={disabled || loading}
-            style={{ padding: '8px 16px', display: 'flex', alignItems: 'center', gap: '6px' }}
-          >
-            <FaUpload /> Enviar Áudio
-          </button>
-          <button
-            onClick={() => setAudioURL(null)}
-            style={{ padding: '8px 16px', background: 'transparent', border: '1px solid #888', color: '#888', borderRadius: '30px' }}
-          >
-            Cancelar
-          </button>
-        </>
-      )}
-    </div>
+    <button
+      onClick={recording ? stopRecording : startRecording}
+      disabled={disabled}
+      className={`audio-btn ${recording ? 'recording' : ''}`}
+      title={recording ? 'Parar gravação' : 'Gravar áudio'}
+    >
+      {recording ? <FaStop /> : <FaMicrophone />}
+    </button>
   );
-}
+};
+
+export default AudioRecorder;
