@@ -7,11 +7,9 @@ import Chat from './pages/Chat';
 function App() {
   return (
     <>
-      <Toaster position="top-right" toastOptions={{ style: { background: '#1a1a1a', color: '#fff', border: '1px solid #333' } }} />
+      <Toaster position="top-right" />
       <Navbar />
-      <main className="container" style={{ flex: 1, paddingTop: '30px', paddingBottom: '60px', minHeight: '80vh' }}>
-        <Chat />
-      </main>
+      <Chat />
       <Footer />
     </>
   );
