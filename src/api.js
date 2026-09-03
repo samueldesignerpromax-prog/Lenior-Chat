@@ -1,10 +1,7 @@
 import axios from 'axios';
 
-// Em desenvolvimento, use o proxy do Vite
+// Use '/api' para desenvolvimento com proxy
 export const API_URL = '/api';
-
-// Se quiser testar direto, descomente a linha abaixo e comente a de cima
-// export const API_URL = 'https://api-lenior.onrender.com';
 
 const api = axios.create({
   baseURL: API_URL,
@@ -23,7 +20,7 @@ api.interceptors.response.use(
     return response;
   },
   (error) => {
-    console.error(`❌ Erro na requisição:`, error.response?.status, error.response?.data || error.message);
+    console.error(`❌ Erro:`, error.response?.status, error.response?.data || error.message);
     return Promise.reject(error);
   }
 );
