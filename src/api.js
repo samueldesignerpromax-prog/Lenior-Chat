@@ -1,7 +1,10 @@
 import axios from 'axios';
 
-// Usa variável de ambiente ou fallback
-export const API_URL = import.meta.env.VITE_API_URL || 'https://api-lenior.onrender.com';
+// Usa a variável de ambiente
+export const API_URL = import.meta.env.VITE_API_URL;
+
+// Fallback para teste (caso o .env não carregue)
+// export const API_URL = 'https://api-lenior.onrender.com';
 
 const api = axios.create({
   baseURL: API_URL,
@@ -9,9 +12,9 @@ const api = axios.create({
   headers: { 'Content-Type': 'application/json' },
 });
 
-// Interceptor para log (útil para debug)
+// Interceptadores para debug
 api.interceptors.request.use((config) => {
-  console.log(`🚀 [${config.method.toUpperCase()}] ${config.baseURL}${config.url}`);
+  console.log(`[${config.method.toUpperCase()}] ${config.url}`, config.data || '');
   return config;
 });
 
@@ -21,7 +24,7 @@ api.interceptors.response.use(
     return response;
   },
   (error) => {
-    console.error(`❌ Erro:`, error.response?.status, error.response?.data || error.message);
+    console.error(`❌ Erro na requisição:`, error.response?.status, error.response?.data || error.message);
     return Promise.reject(error);
   }
 );
