@@ -1,9 +1,7 @@
 import axios from 'axios';
 
-// Tenta usar a variável de ambiente, senão usa a URL fixa
-const API_URL = import.meta.env.VITE_API_URL || 'https://api-lenior.onrender.com';
-
-console.log('🔗 API URL:', API_URL);
+// URL absoluta da API – SEM barra no final
+export const API_URL = 'https://api-lenior.onrender.com';
 
 const api = axios.create({
   baseURL: API_URL,
@@ -11,9 +9,9 @@ const api = axios.create({
   headers: { 'Content-Type': 'application/json' },
 });
 
-// Interceptor para log detalhado
+// Interceptadores para debug
 api.interceptors.request.use((config) => {
-  console.log(`📤 [${config.method.toUpperCase()}] ${config.baseURL}${config.url}`, config.data || '');
+  console.log(`[${config.method.toUpperCase()}] ${config.baseURL}${config.url}`, config.data || '');
   return config;
 });
 
@@ -24,14 +22,9 @@ api.interceptors.response.use(
   },
   (error) => {
     console.error('❌ Erro completo:', error);
-    if (error.response) {
-      console.error('Status:', error.response.status);
-      console.error('Dados:', error.response.data);
-    } else if (error.request) {
-      console.error('Requisição feita mas sem resposta:', error.request);
-    } else {
-      console.error('Erro ao configurar requisição:', error.message);
-    }
+    console.error('Status:', error.response?.status);
+    console.error('Dados:', error.response?.data);
+    console.error('Config:', error.config);
     return Promise.reject(error);
   }
 );
